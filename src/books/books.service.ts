@@ -1,48 +1,65 @@
 import { Injectable } from '@nestjs/common';
+import {
+  InjectModel,
+  // InjectConnection
+} from '@nestjs/mongoose';
+import {
+  Model,
+  // Connection,
+  // HydratedDocument,
+  // QueryWithHelpers
+} from 'mongoose';
 
-import { IBook } from './interfaces/book.interface';
-
-// 1) Пока что криейту и апдейту пофиг на обязательные поля, но Монга потом разрулит.
-// 2) Вообще то, что у меня тут нет отдельного поля айди - плохая практика. Но оставляю, опять-таки, на откуп Монги, которая подъедет в следующем задании
-// 3) Фокусы со спредом тоже кхэ. Но я так понимаю, смысл этого задания именно архитектуру Неста обкатать, потому оставлю пока так до подключения Монги
+import { Book, BookDocument } from './schemas/book.schema';
+import { CreateBookDto } from './interfaces/dto/create-book';
+import { UpdateBookDto } from './interfaces/dto/update-book';
 
 @Injectable()
 export class BooksService {
-  private readonly books: IBook[] = [];
+  constructor(@InjectModel(Book.name) private BookModel: Model<BookDocument>) {}
+  // @InjectConnection() private connection: Connection, // Где и зачем используется?
+
+  // В большинстве ручек не могу реализовать .select('-__v'), надо поразбираться будет в дипломной работе
+  // TODO: Также разобраться как красиво обработать ситуации ненайденной книги и тд и отдать нужный хттп-код. А то он мне в данный момент возвращает статус 200 при несуществующем айдишнике и отдает ничего. При белеберде вместо айдишника - пятисотит, тут красава. Но лучше бы и эту ситуацию перехватывать и в обоих случаях писать, что нет такой книги.
 
   // Добавить книгу
-  create(book: IBook) {
-    this.books.push(book);
-    return book;
+  // TODO: хочу, чтобы информировал почему пятисотит, если не хватает обязательных полей или не соответствуют типы данных
+  // И, кстати, что за прикол с автоматическим преобразованием намбера в строку? Мне не нравится такое поведение. Написано же, что тайтл должен быть строкой, давай без самодеятельности. Пока выглядит так, что лучше использовать req и res, о тогда это не нестовый подход и теряются его преимущества. Должен быть какой-то другой способ, я так понимаю.
+  public async create(data: CreateBookDto): Promise<BookDocument> {
+    const book = new this.BookModel(data);
+    return book.save();
   }
 
   // Запросить все книги
-  findAll(): IBook[] {
-    return this.books;
+  public async findAll(): Promise<BookDocument[]> {
+    return this.BookModel.find().exec();
   }
 
   // Запросить книгу по названию
-  findOne(id: string): IBook {
-    return this.books.find((book: IBook) => book.title === id);
+  // Вообще по-хорошему вот так сделать с id: import { isValidObjectId, Types } from 'mongoose'; -> Types.ObjectId
+  public async findOne(id: string): Promise<BookDocument> {
+    return this.BookModel.findById(id);
   }
 
   // Удалить книгу по названию
-  delete(id: string): IBook[] {
-    const targetIndex = this.books.findIndex(
-      (book: IBook) => book.title === id,
-    );
-    if (targetIndex !== -1) {
-      this.books.splice(targetIndex, 1);
-      return this.books;
-    }
+  public async delete(id: string): Promise<BookDocument> {
+    return this.BookModel.findOneAndRemove({ _id: id }).select('-__v');
+    // или еще проще:
+    // return this.BookModel.findByIdAndRemove(id);
   }
 
   // Редактировать книгу по названию
-  update(id: string, book: IBook): IBook {
-    const targetIndex = this.books.findIndex(
-      (book: IBook) => book.title === id,
-    );
-    this.books.splice(targetIndex, 1, book);
-    return this.books[targetIndex];
+  public async update(id: string, data: UpdateBookDto): Promise<BookDocument> {
+    const book = await this.BookModel.findOneAndUpdate({ _id: id }, data);
+    // Блин, да как сделать-то, чтобы он мне уже апдейтнутую версию тут возвращал? Может редиректом? Эвэйт не помог. Вероятно эти обёртки тут вообще не нужны, надо будет поразбираться, может они уже где-то в декораторах зашиты
+    return book;
+    // или еще проще:
+    // return this.BookModel.findByIdAndUpdate(id, data, { new: true });
   }
 }
+
+/*
+Зачем в возвращаемом типе delete и update вот это всё?:
+QueryWithHelpers<HydratedDocument<BookDocument, {}, {}> | null, HydratedDocument<BookDocument, {}, {}>, {}, BookDocument>
+Депрекейтед, к тому же
+*/
