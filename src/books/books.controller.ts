@@ -8,12 +8,17 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  Header,
 } from '@nestjs/common';
-
-// ЕЩЕ МИДЛВАРУ 404 САМ ПОВТОРИ! Если ее тут автоматом нет
-
+// import { HydratedDocument, QueryWithHelpers } from 'mongoose';
 import { BooksService } from './books.service';
-import { IBook } from './interfaces/book.interface';
+import { CreateBookDto } from './interfaces/dto/create-book';
+import { UpdateBookDto } from './interfaces/dto/update-book';
+import { IParamId } from './interfaces/param-id';
+import {
+  // BookDocument,
+  Book,
+} from './schemas/book.schema';
 
 @Controller('books')
 export class BooksController {
@@ -21,31 +26,40 @@ export class BooksController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() book: IBook): IBook {
-    return this.booksService.create(book);
+  @Header('Cache-Control', 'none')
+  public create(@Body() body: CreateBookDto): Promise<Book> {
+    // Можно и Promise<BookDocument>, разницы не понял
+    return this.booksService.create(body);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getAllBooks() {
+  public getAllBooks(): Promise<Book[]> {
     return this.booksService.findAll();
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  getTargetBook(@Param('id') id: string): IBook {
+  public getTargetBook(@Param('id') id: string): Promise<Book> {
+    // альтернативный способ извлечения id
     return this.booksService.findOne(id);
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  deleteTargetBook(@Param('id') id: string): IBook[] {
+  public delete(@Param() { id }: IParamId): Promise<Book> {
     return this.booksService.delete(id);
   }
 
   @Put(':id')
-  @HttpCode(HttpStatus.OK)
-  update(@Param('id') id: string, @Body() book: IBook): IBook {
-    return this.booksService.update(id, book);
+  public update(
+    @Param() { id }: IParamId,
+    @Body() body: UpdateBookDto,
+  ): Promise<Book> {
+    return this.booksService.update(id, body);
   }
 }
+
+/*
+Аналогичное переусложнение в Delete и Put:
+QueryWithHelpers<HydratedDocument<BookDocument, {}, {}> | null, HydratedDocument<BookDocument, {}, {}>, {}, BookDocument>
+*/
