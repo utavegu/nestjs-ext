@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 import { BooksModule } from './books/books.module';
 import { BooksController } from './books/books.controller';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { BooksController } from './books/books.controller';
       },
     ),
     BooksModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
