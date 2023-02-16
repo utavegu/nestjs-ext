@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable prettier/prettier */
-import * as request from 'supertest';
-import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-
-import { BooksModule } from './books.module';
+import { Test } from '@nestjs/testing';
+import * as request from 'supertest';
+import { BooksController } from './books.controller';
 import { BooksService } from './books.service';
-import { mockBook, mockCreateBookDto, mockId, mockUpdateBookDto } from './mocks/books.mock';
+import {
+  mockBook,
+  mockCreateBookDto,
+  mockId,
+  mockUpdateBookDto,
+} from './mocks/books.mock';
 
 describe('Books', () => {
   let app: INestApplication;
@@ -20,7 +23,8 @@ describe('Books', () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [BooksModule],
+      controllers: [BooksController],
+      providers: [BooksService],
     })
       .overrideProvider(BooksService)
       .useValue(booksService)
@@ -33,46 +37,36 @@ describe('Books', () => {
   it(`/books (GET)`, () => {
     return request(app.getHttpServer())
       .get('/books')
-      // .expect(200)
-      .expect({
-        data: booksService.findAll(),
-      });
+      .expect(200)
+      .expect(booksService.findAll());
   });
 
   it(`/books/:id (GET)`, () => {
     return request(app.getHttpServer())
       .get(`/books/${mockId}`)
-      // .expect(200)
-      .expect({
-        data: booksService.findOne(mockId),
-      });
+      .expect(200)
+      .expect(booksService.findOne(mockId));
   });
 
   it(`/books (POST)`, () => {
     return request(app.getHttpServer())
       .post('/books')
-      // .expect(200) // другой код
-      .expect({
-        data: booksService.create(mockCreateBookDto),
-      });
+      .expect(201)
+      .expect(booksService.create(mockCreateBookDto));
   });
 
   it(`/books/:id (DELETE)`, () => {
     return request(app.getHttpServer())
       .delete(`/books/${mockId}`)
-      // .expect(200)
-      .expect({
-        data: booksService.delete(mockId),
-      });
+      .expect(200)
+      .expect(booksService.delete(mockId));
   });
 
   it(`/books/:id (PUT)`, () => {
     return request(app.getHttpServer())
       .put(`/books/${mockId}`)
-      // .expect(200)
-      .expect({
-        data: booksService.update(mockId, mockUpdateBookDto),
-      });
+      .expect(200)
+      .expect(booksService.update(mockId, mockUpdateBookDto));
   });
 
   afterAll(async () => {
