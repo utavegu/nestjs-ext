@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>WebSocket testing client</title>
+</head>
+
+<body>
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io.connect('http://localhost:3000');
+
+    const mockBookId = '63ce577c4ae871832103a9c3';
+
+    const mockBookCommentPayload = {
+      bookId: mockBookId,
+      comment:
+        'Великолепно! Шедевр! Я бы сам лучше не написал! Обязательно куплю ещё три штуки!',
+    };
+
+    socket.emit('add-comment', mockBookCommentPayload);
+    socket.on('newCommentFromServer', (answer) => {
+      console.log('Добавлен новый комментарий:');
+      console.log(answer)
+    })
+
+    socket.emit('get-all-comments', mockBookId, (answer) => {
+      console.log('Все комментарии выбранной книги:');
+      console.log(answer);
+    });
+  </script>
+</body>
+
+</html>

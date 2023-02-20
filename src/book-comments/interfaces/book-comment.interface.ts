@@ -1,5 +1,5 @@
 export interface IBookComment {
-  id: number;
-  bookId: number;
+  id: string;
+  bookId: string;
   comment: string;
 }

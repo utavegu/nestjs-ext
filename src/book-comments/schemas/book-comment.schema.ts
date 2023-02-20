@@ -3,11 +3,11 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class BookComment {
-  @Prop({ required: true })
-  public id: number;
+  @Prop({ required: false })
+  public id: string;
 
   @Prop({ required: true })
-  public bookId: number;
+  public bookId: string;
 
   @Prop({ required: true })
   public comment: string;
@@ -15,4 +15,4 @@ export class BookComment {
 
 export type BookCommentDocument = BookComment & Document;
 
-export const BookSchema = SchemaFactory.createForClass(BookComment);
+export const BookCommentSchema = SchemaFactory.createForClass(BookComment);
